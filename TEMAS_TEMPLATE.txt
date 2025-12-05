@@ -1,0 +1,29 @@
+# ============================================
+# TEMPLATE PARA CREAR TEMAS EN EL GRUPO
+# ============================================
+# 
+# 1. Crea el grupo principal "Red Judicial"
+# 2. Activa los temas en: Configuración → Temas → Activar
+# 3. Crea estos 16 temas dentro del grupo:
+
+
+2. Derecho Civil
+3. Derecho Penal
+4. Derecho de Familia
+5. Derecho Laboral
+6. Derecho Tributario
+7. Derecho Constitucional
+8. Derecho Administrativo
+9. Derecho Inmobiliario
+10. JPL
+11. Propiedad Intelectual
+12. Derecho Comercial
+13. Insolvencia y Reemprendimiento
+14. Derecho Ambiental y Minero
+15. Legal Tech
+16. Oportunidades Laborales
+
+# 4. Obtén el invite link del grupo principal
+# 5. Pégalo aquí:
+
+Link del grupo principal: https://t.me/+

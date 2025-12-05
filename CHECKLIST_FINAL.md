@@ -45,7 +45,7 @@
 Abre `.env` y completa:
 
 ```env
-BOT_TOKEN=8502892967:AAECodIkh7bMOnqG6HkAtJTP4e6z_gn3MCY
+BOT_TOKEN=tu_token_del_bot_aqui
 SUPABASE_URL=(pega la URL de Supabase)
 SUPABASE_KEY=(pega la anon key)
 WEBHOOK_DOMAIN=

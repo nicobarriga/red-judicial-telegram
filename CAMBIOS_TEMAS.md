@@ -105,7 +105,7 @@ He adaptado todo el código para trabajar con **1 grupo principal con 16 temas**
 ### 3. Actualizar `.env`
 
 ```env
-BOT_TOKEN=8502892967:AAECodIkh7bMOnqG6HkAtJTP4e6z_gn3MCY
+BOT_TOKEN=tu_token_del_bot_aqui
 SUPABASE_URL=(tu URL)
 SUPABASE_KEY=(tu key)
 # FOLDER_INVITE_URL ya no es necesario

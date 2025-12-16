@@ -49,12 +49,14 @@ export async function registerHandlers(): Promise<void> {
 
   // Captura de onboarding también si el usuario escribe sin /start (en privado)
   bot.on('message:contact', async (ctx, next) => {
+    if (ctx.chat?.type !== 'private') return await next();
     await ensureUserAndGetStep(ctx);
     const handled = await handleOnboardingContact(ctx);
     if (!handled) await next();
   });
 
   bot.on('message:text', async (ctx, next) => {
+    if (ctx.chat?.type !== 'private') return await next();
     if (ctx.message?.text?.startsWith('/')) return await next();
     const step = await ensureUserAndGetStep(ctx);
     if (!step) return await next();

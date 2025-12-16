@@ -52,11 +52,12 @@ export async function handleGroupWelcome(ctx: Context): Promise<void> {
   }
 
   const text =
-    `👋 ¡Bienvenido/a ${mention} a Red Judicial!\n\n` +
-    `Esta es una comunidad jurídica para compartir criterios prácticos y resolver dudas concretas.\n\n` +
-    `**Cómo usar la comunidad**\n` +
-    `- Publica en el tema correcto (Civil, Familia, Laboral, etc.)\n` +
-    `- Haz preguntas con contexto mínimo (hechos + etapa + petición)\n` +
+    `👋 ¡Bienvenido/a ${mention} a **Red Judicial**!\n\n` +
+    `Bienvenido/a a **Red Judicial**, comunidad jurídica profesional en Telegram.\n\n` +
+    `**Uso recomendado**\n` +
+    `- Utiliza el tema correspondiente a tu materia\n` +
+    `- Preguntas claras, con contexto mínimo (hechos + etapa + qué necesitas)\n` +
+    `- Publicidad/servicios solo en el tema **“Oportunidades Laborales”**\n` +
     `- Mantengamos orden, utilidad y respeto profesional` +
     topicsText;
 

@@ -3,6 +3,7 @@ import { getOrCreateUser, getUserByTelegramId } from '../database/client';
 import { InlineKeyboard } from 'grammy';
 import { sendMenu } from './onboarding';
 import { config } from '../config';
+import { createOneTimeInviteLink, isUserInChat } from '../utils/inviteLinks';
 
 /**
  * Handler para el comando /start
@@ -43,6 +44,33 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
       if (payload === 'registro') {
         await ctx.reply('✅ Ya estás registrado.\n\nSi quieres **actualizar tus datos**, usa /registro.', { parse_mode: 'Markdown' });
       }
+
+      // Si el grupo es privado y el usuario no está dentro, entregarle link personal (1 uso)
+      if (typeof config.mainGroupChatId === 'number') {
+        const inGroup = await isUserInChat({ api: ctx.api, chatId: config.mainGroupChatId, telegramUserId: user.id });
+        if (!inGroup) {
+          try {
+            const invite = await createOneTimeInviteLink({
+              api: ctx.api,
+              chatId: config.mainGroupChatId,
+              telegramUserId: user.id,
+            });
+            await ctx.reply(
+              '🔐 Aquí tienes tu link **personal** para entrar al grupo (es de **1 uso**):\n' +
+                `${invite}\n\n` +
+                'Si ya lo usaste o te da error, usa /registro para generar uno nuevo.',
+              { parse_mode: 'Markdown', link_preview_options: { is_disabled: true } }
+            );
+          } catch (e) {
+            console.error('Error creando invite link (start):', e);
+            await ctx.reply(
+              '🔐 Estás registrado, pero no pude generar tu link de acceso ahora. ' +
+                'Por favor avisa a un administrador para revisar permisos del bot (crear links de invitación).'
+            );
+          }
+        }
+      }
+
       await sendMenu(ctx);
       return;
     }
@@ -56,7 +84,8 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
     const kb = new InlineKeyboard().webApp('📝 Completar registro', webAppUrl);
     await ctx.reply(
       '¡Bienvenido/a a **Red Judicial**! 👋\n\n' +
-        'Para acceder a los temas, completa tu registro en 1 minuto:',
+        'Para acceder a la comunidad privada, completa tu registro en 1 minuto.\n' +
+        'Luego te entrego un link **personal** de acceso (1 uso):',
       { parse_mode: 'Markdown', reply_markup: kb }
     );
 

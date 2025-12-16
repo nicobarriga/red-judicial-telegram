@@ -199,8 +199,13 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
               .then(r => r.json().catch(() => ({})))
               .then((j) => {
                 if (j && j.ok) {
-                  if (tg.showAlert) tg.showAlert('✅ Enviado. Vuelve al chat para ver la confirmación.');
-                  setTimeout(() => tg.close(), 700);
+                  // En algunos clientes tg.close() puede ser sensible al timing.
+                  // Hacemos cierre robusto: alert + doble intento + fallback window.close().
+                  if (tg.showAlert) tg.showAlert('✅ Listo. Volviendo al chat…');
+                  try { tg.MainButton.hide(); } catch (_) {}
+                  setTimeout(() => { try { tg.close(); } catch (_) {} }, 700);
+                  setTimeout(() => { try { tg.close(); } catch (_) {} }, 1400);
+                  setTimeout(() => { try { window.close(); } catch (_) {} }, 1700);
                 } else {
                   showError('No se pudo guardar el registro. Intenta nuevamente.');
                 }

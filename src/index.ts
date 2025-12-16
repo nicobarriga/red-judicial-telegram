@@ -5,7 +5,8 @@ import { bot, initBot } from './bot/bot';
 import { initSupabase } from './database/client';
 import { getRegistroWebAppHtml } from './webapp/registroPage';
 import { verifyTelegramWebAppInitData } from './utils/telegramWebApp';
-import { updateUserProfile, getMainGroup } from './database/client';
+import { updateUserProfile } from './database/client';
+import { createOneTimeInviteLink } from './utils/inviteLinks';
 
 const app = express();
 
@@ -110,20 +111,39 @@ function setupRoutes(): void {
         onboarding_step: null,
       });
 
-      // Confirmación por Telegram (si el usuario ya inició el bot, esto llega)
-      const mainGroup = await getMainGroup().catch(() => null);
-      const invite = mainGroup?.invite_link;
-      const text =
-        '✅ Registro actualizado. ¡Gracias!\n\n' +
-        (invite
-          ? 'Ahora solicita unirte al grupo y te aprobamos automáticamente (en segundos):\n' + invite
-          : 'Ahora solicita unirte al grupo. Si ya solicitaste, te aprobamos automáticamente.');
-
-      bot.api.sendMessage(userId, text, { link_preview_options: { is_disabled: true } }).catch(() => undefined);
-
-      // Auto-aprobación (si ya existe solicitud pendiente)
+      // Entregar link personal (1 uso) al grupo privado (si el usuario ya inició el bot, esto llega)
       if (typeof config.mainGroupChatId === 'number') {
-        bot.api.approveChatJoinRequest(config.mainGroupChatId, userId).catch(() => undefined);
+        try {
+          const invite = await createOneTimeInviteLink({
+            api: bot.api,
+            chatId: config.mainGroupChatId,
+            telegramUserId: userId,
+          });
+          const text =
+            '✅ Registro listo.\n\n' +
+            'Presiona este link **personal** (de **1 uso**) y tendrás acceso inmediato al grupo:\n' +
+            `${invite}\n\n` +
+            'Si te da error o ya lo usaste, vuelve a abrir el bot y usa /registro para generar uno nuevo.';
+          bot.api
+            .sendMessage(userId, text, {
+              parse_mode: 'Markdown',
+              link_preview_options: { is_disabled: true },
+            })
+            .catch(() => undefined);
+        } catch (e) {
+          console.error('Error creando invite link (submit):', e);
+          bot.api
+            .sendMessage(
+              userId,
+              '✅ Registro listo.\n\nNo pude generar tu link de acceso en este momento. ' +
+                'Por favor avisa a un administrador para revisar permisos del bot (crear links de invitación).'
+            )
+            .catch(() => undefined);
+        }
+      } else {
+        bot.api
+          .sendMessage(userId, '✅ Registro listo. (Falta configurar MAIN_GROUP_CHAT_ID para generar el link de acceso).')
+          .catch(() => undefined);
       }
 
       res.json({ ok: true });

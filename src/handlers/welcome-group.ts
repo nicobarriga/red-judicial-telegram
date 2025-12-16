@@ -39,8 +39,7 @@ export async function handleGroupWelcome(ctx: Context): Promise<void> {
 
   const text =
     `👋 ¡Bienvenido/a ${mention} a Red Judicial!\n\n` +
-    `Para ingresar, primero solicita unirte al grupo y completa el registro.\n` +
-    `✅ Si ya estás registrado, tu aprobación es **automática e instantánea**.\n\n` +
+    `Para acceder, completa el registro (1 minuto).\n\n` +
     `Presiona **Empezar** para registrar/actualizar (abre el bot en privado).`;
 
   try {

@@ -39,7 +39,6 @@ export async function registerHandlers(): Promise<void> {
   const { sendMenu } = await import('../handlers/onboarding');
   const { handleGroupWelcome } = await import('../handlers/welcome-group');
   const { handleDeleteServiceMessages } = await import('../handlers/delete-service-messages');
-  const { handleJoinRequest } = await import('../handlers/join-request');
 
   // Comandos
   bot.command('start', handleStart);
@@ -70,9 +69,6 @@ export async function registerHandlers(): Promise<void> {
 
   // Bienvenida automática al entrar al grupo (chat_member)
   bot.on('chat_member', handleGroupWelcome);
-
-  // Solicitudes de ingreso (Join Requests)
-  bot.on('chat_join_request', handleJoinRequest);
 
   console.log('✅ Handlers registrados correctamente');
 }

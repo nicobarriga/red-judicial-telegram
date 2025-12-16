@@ -272,3 +272,23 @@ export async function getUserStats(telegramUserId: number): Promise<{
   };
 }
 
+/**
+ * Registra (auditoría básica) un link de invitación emitido para un usuario.
+ */
+export async function recordUserInvite(params: {
+  telegramUserId: number;
+  chatId: number;
+  inviteLink: string;
+}): Promise<void> {
+  const client = initSupabase();
+  const { error } = await client.from('telegram_user_invites').insert({
+    telegram_user_id: params.telegramUserId,
+    chat_id: params.chatId,
+    invite_link: params.inviteLink,
+  });
+
+  if (error) {
+    console.error('Error registrando invite link:', error);
+  }
+}
+

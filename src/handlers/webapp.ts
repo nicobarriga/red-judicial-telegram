@@ -3,7 +3,7 @@ import { config } from '../config';
 import { getOrCreateUser, updateUserProfile } from '../database/client';
 import { verifyTelegramWebAppInitData } from '../utils/telegramWebApp';
 import { sendMenu } from './onboarding';
-import { getMainGroup } from '../database/client';
+import { createOneTimeInviteLink } from '../utils/inviteLinks';
 
 type WebAppPayload = {
   firstName: string;
@@ -116,26 +116,33 @@ export async function handleWebAppData(ctx: Context): Promise<void> {
       onboarding_step: null,
     });
 
-    // Si el grupo está en modo "solicitudes", intentar aprobar automáticamente (si ya solicitó)
+    // Entregar link personal (1 uso) al grupo privado
     if (typeof config.mainGroupChatId === 'number') {
       try {
-        await ctx.api.approveChatJoinRequest(config.mainGroupChatId, from.id);
-      } catch {
-        // Puede fallar si no hay solicitud pendiente; no es crítico.
+        const invite = await createOneTimeInviteLink({
+          api: ctx.api,
+          chatId: config.mainGroupChatId,
+          telegramUserId: from.id,
+        });
+        await ctx.reply(
+          '✅ Registro listo.\n\n' +
+            'Presiona este link **personal** (de **1 uso**) y tendrás acceso inmediato al grupo:\n' +
+            `${invite}\n\n` +
+            'Si te da error o ya lo usaste, vuelve a abrir el bot y usa /registro para generar uno nuevo.',
+          { link_preview_options: { is_disabled: true }, parse_mode: 'Markdown' }
+        );
+      } catch (e) {
+        console.error('Error creando invite link:', e);
+        await ctx.reply(
+          '✅ Registro listo.\n\n' +
+            'No pude generar tu link de acceso en este momento. ' +
+            'Por favor avisa a un administrador para revisar permisos del bot (crear links de invitación).'
+        );
       }
+    } else {
+      await ctx.reply('✅ Registro listo. (Falta configurar MAIN_GROUP_CHAT_ID para generar el link de acceso).');
     }
 
-    // Instrucción clara de ingreso instantáneo
-    const mainGroup = await getMainGroup().catch(() => null);
-    if (mainGroup?.invite_link) {
-      await ctx.reply(
-        '🚀 Listo. Ahora solicita unirte al grupo y te aprobamos automáticamente (en segundos):\n' +
-          `${mainGroup.invite_link}`,
-        { link_preview_options: { is_disabled: true } }
-      );
-    }
-
-    await ctx.reply('✅ ¡Registro completado! Gracias.');
     await sendMenu(ctx);
   } catch (e) {
     console.error('Error en handleWebAppData:', e);

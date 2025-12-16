@@ -47,9 +47,26 @@ CREATE TABLE IF NOT EXISTS user_topic_interest (
   clicked_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Tabla mínima para auditoría de links de invitación emitidos por el bot
+-- (cada link es personal; en modo 1 uso, el bot genera uno nuevo por usuario cuando corresponde)
+CREATE TABLE IF NOT EXISTS telegram_user_invites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  telegram_user_id BIGINT NOT NULL REFERENCES telegram_users(telegram_id) ON DELETE CASCADE,
+  chat_id BIGINT NOT NULL,
+  invite_link TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  used_at TIMESTAMPTZ NULL
+);
+
 -- Índice para búsquedas eficientes
 CREATE INDEX IF NOT EXISTS idx_user_topic_interest 
 ON user_topic_interest(telegram_user_id, topic_slug);
+
+CREATE INDEX IF NOT EXISTS idx_telegram_user_invites_user_id
+ON telegram_user_invites(telegram_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_telegram_user_invites_created_at
+ON telegram_user_invites(created_at DESC);
 
 -- Índice para búsquedas por slug
 CREATE INDEX IF NOT EXISTS idx_topic_slug 
@@ -68,4 +85,5 @@ COMMENT ON TABLE telegram_group IS 'Grupo principal de Red Judicial con temas or
 COMMENT ON TABLE telegram_topics IS 'Temas/especialidades dentro del grupo principal';
 COMMENT ON TABLE telegram_users IS 'Usuarios que han interactuado con el bot';
 COMMENT ON TABLE user_topic_interest IS 'Registro de intereses en temas para métricas';
+COMMENT ON TABLE telegram_user_invites IS 'Auditoría básica de links de invitación emitidos por el bot';
 

@@ -1,5 +1,6 @@
 import { Context, InlineKeyboard } from 'grammy';
 import { config } from '../config';
+import { getActiveTopics } from '../database/client';
 
 function getDeepLinkStart(): string | null {
   if (!config.botUsername) return null;
@@ -37,13 +38,31 @@ export async function handleGroupWelcome(ctx: Context): Promise<void> {
   const mention = user.username ? `@${user.username}` : (user.first_name || 'Hola');
   const deepLink = getDeepLinkStart();
 
+  let topicsText = '';
+  try {
+    const topics = await getActiveTopics();
+    if (topics?.length) {
+      // Lista compacta para que quede legible en el tema de Bienvenida
+      topicsText =
+        '\n\n**Temas disponibles** (elige el que corresponda):\n' +
+        topics.map((t) => `- ${t.titulo}`).join('\n');
+    }
+  } catch (e) {
+    console.error('Error obteniendo temas para bienvenida:', e);
+  }
+
   const text =
     `👋 ¡Bienvenido/a ${mention} a Red Judicial!\n\n` +
-    `Para acceder, completa el registro (1 minuto).\n\n` +
-    `Presiona **Empezar** para registrar/actualizar (abre el bot en privado).`;
+    `Esta es una comunidad jurídica para compartir criterios prácticos y resolver dudas concretas.\n\n` +
+    `**Cómo usar la comunidad**\n` +
+    `- Publica en el tema correcto (Civil, Familia, Laboral, etc.)\n` +
+    `- Haz preguntas con contexto mínimo (hechos + etapa + petición)\n` +
+    `- Mantengamos orden, utilidad y respeto profesional` +
+    topicsText;
 
   try {
-    const keyboard = deepLink ? new InlineKeyboard().url('🚀 Empezar', deepLink) : undefined;
+    // En modo privado, el usuario ya viene registrado; dejamos botón opcional para actualizar datos.
+    const keyboard = deepLink ? new InlineKeyboard().url('✍️ Actualizar registro', deepLink) : undefined;
 
     const sent = await ctx.api.sendMessage(chatId, text, {
       parse_mode: 'Markdown',

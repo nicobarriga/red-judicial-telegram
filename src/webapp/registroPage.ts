@@ -198,13 +198,25 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
           };
 
           try {
-            tg.sendData(JSON.stringify(data));
-            // En algunos clientes (desktop) el cierre inmediato puede impedir que el usuario note el envío.
-            // Mostramos confirmación y cerramos con un pequeño delay.
-            if (tg.showAlert) {
-              tg.showAlert('Enviado. Vuelve al chat para ver la confirmación.');
-            }
-            setTimeout(() => tg.close(), 700);
+            // 1) Intento estándar: sendData al bot (puede fallar/silenciarse en algunos clientes)
+            try { tg.sendData(JSON.stringify(data)); } catch (_) {}
+
+            // 2) Fallback robusto: POST al backend (mismo dominio) para persistir sí o sí
+            fetch('/webapp/registro/submit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ initData: data.initData, payload: data.payload }),
+            })
+              .then(r => r.json().catch(() => ({})))
+              .then((j) => {
+                if (j && j.ok) {
+                  if (tg.showAlert) tg.showAlert('✅ Enviado. Vuelve al chat para ver la confirmación.');
+                  setTimeout(() => tg.close(), 700);
+                } else {
+                  showError('No se pudo guardar el registro. Intenta nuevamente.');
+                }
+              })
+              .catch(() => showError('No se pudo guardar el registro. Intenta nuevamente.'));
           } catch (e) {
             showError('No se pudo enviar el registro. Intenta nuevamente.');
           }

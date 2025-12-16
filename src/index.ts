@@ -4,6 +4,8 @@ import { config, validateConfig } from './config';
 import { bot, initBot } from './bot/bot';
 import { initSupabase } from './database/client';
 import { getRegistroWebAppHtml } from './webapp/registroPage';
+import { verifyTelegramWebAppInitData } from './utils/telegramWebApp';
+import { updateUserProfile } from './database/client';
 
 const app = express();
 
@@ -44,6 +46,80 @@ function setupRoutes(): void {
   app.get('/webapp/registro', (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(getRegistroWebAppHtml({ botUsername: config.botUsername }));
+  });
+
+  // Web App submit (fallback robusto para clientes que no entregan web_app_data al bot)
+  app.post('/webapp/registro/submit', express.json(), async (req, res) => {
+    try {
+      const initData = String(req.body?.initData || '');
+      const payload = req.body?.payload || null;
+
+      const verified = verifyTelegramWebAppInitData({
+        initData,
+        botToken: config.botToken,
+        maxAgeSeconds: 24 * 60 * 60,
+      });
+
+      if (!verified.ok) {
+        res.status(401).json({ ok: false, error: 'invalid_init_data' });
+        return;
+      }
+
+      const userId = verified.data.user?.id;
+      if (typeof userId !== 'number') {
+        res.status(400).json({ ok: false, error: 'missing_user' });
+        return;
+      }
+
+      const firstName = String(payload?.firstName || '').trim();
+      const lastName = String(payload?.lastName || '').trim();
+      const email = String(payload?.email || '').trim().toLowerCase();
+      const phoneNumber = String(payload?.phoneNumber || '').trim().replace(/\s+/g, ' ');
+      const role = String(payload?.role || '');
+      const professionOrStudy = payload?.professionOrStudy ? String(payload.professionOrStudy).trim() : null;
+
+      if (firstName.length < 2 || lastName.length < 2) {
+        res.status(400).json({ ok: false, error: 'invalid_name' });
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        res.status(400).json({ ok: false, error: 'invalid_email' });
+        return;
+      }
+      if (phoneNumber.length < 6) {
+        res.status(400).json({ ok: false, error: 'invalid_phone' });
+        return;
+      }
+      if (!['lawyer', 'student', 'related'].includes(role)) {
+        res.status(400).json({ ok: false, error: 'invalid_role' });
+        return;
+      }
+      if (role === 'related' && (!professionOrStudy || professionOrStudy.length < 2)) {
+        res.status(400).json({ ok: false, error: 'missing_profession' });
+        return;
+      }
+
+      await updateUserProfile(userId, {
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        phone_number: phoneNumber,
+        is_lawyer: role === 'lawyer',
+        profession_or_study: role === 'related' ? professionOrStudy : role === 'student' ? 'Estudiante de Derecho' : null,
+        onboarding_completed: true,
+        onboarding_step: null,
+      });
+
+      // Confirmación por Telegram (si el usuario ya inició el bot, esto llega)
+      bot.api
+        .sendMessage(userId, '✅ Registro actualizado. ¡Gracias!')
+        .catch(() => undefined);
+
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('Error en /webapp/registro/submit:', e);
+      res.status(500).json({ ok: false, error: 'server_error' });
+    }
   });
 
   // Webhook de Telegram

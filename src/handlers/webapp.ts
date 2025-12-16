@@ -3,6 +3,7 @@ import { config } from '../config';
 import { getOrCreateUser, updateUserProfile } from '../database/client';
 import { verifyTelegramWebAppInitData } from '../utils/telegramWebApp';
 import { sendMenu } from './onboarding';
+import { getMainGroup } from '../database/client';
 
 type WebAppPayload = {
   firstName: string;
@@ -114,6 +115,25 @@ export async function handleWebAppData(ctx: Context): Promise<void> {
       onboarding_completed: true,
       onboarding_step: null,
     });
+
+    // Si el grupo está en modo "solicitudes", intentar aprobar automáticamente (si ya solicitó)
+    if (typeof config.mainGroupChatId === 'number') {
+      try {
+        await ctx.api.approveChatJoinRequest(config.mainGroupChatId, from.id);
+      } catch {
+        // Puede fallar si no hay solicitud pendiente; no es crítico.
+      }
+    }
+
+    // Instrucción clara de ingreso instantáneo
+    const mainGroup = await getMainGroup().catch(() => null);
+    if (mainGroup?.invite_link) {
+      await ctx.reply(
+        '🚀 Listo. Ahora solicita unirte al grupo y te aprobamos automáticamente (en segundos):\n' +
+          `${mainGroup.invite_link}`,
+        { link_preview_options: { is_disabled: true } }
+      );
+    }
 
     await ctx.reply('✅ ¡Registro completado! Gracias.');
     await sendMenu(ctx);

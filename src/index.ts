@@ -5,7 +5,7 @@ import { bot, initBot } from './bot/bot';
 import { initSupabase } from './database/client';
 import { getRegistroWebAppHtml } from './webapp/registroPage';
 import { verifyTelegramWebAppInitData } from './utils/telegramWebApp';
-import { updateUserProfile } from './database/client';
+import { updateUserProfile, getMainGroup } from './database/client';
 
 const app = express();
 
@@ -111,9 +111,20 @@ function setupRoutes(): void {
       });
 
       // Confirmación por Telegram (si el usuario ya inició el bot, esto llega)
-      bot.api
-        .sendMessage(userId, '✅ Registro actualizado. ¡Gracias!')
-        .catch(() => undefined);
+      const mainGroup = await getMainGroup().catch(() => null);
+      const invite = mainGroup?.invite_link;
+      const text =
+        '✅ Registro actualizado. ¡Gracias!\n\n' +
+        (invite
+          ? 'Ahora solicita unirte al grupo y te aprobamos automáticamente (en segundos):\n' + invite
+          : 'Ahora solicita unirte al grupo. Si ya solicitaste, te aprobamos automáticamente.');
+
+      bot.api.sendMessage(userId, text, { link_preview_options: { is_disabled: true } }).catch(() => undefined);
+
+      // Auto-aprobación (si ya existe solicitud pendiente)
+      if (typeof config.mainGroupChatId === 'number') {
+        bot.api.approveChatJoinRequest(config.mainGroupChatId, userId).catch(() => undefined);
+      }
 
       res.json({ ok: true });
     } catch (e) {

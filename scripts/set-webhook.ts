@@ -35,7 +35,8 @@ async function setWebhook(): Promise<void> {
       body: JSON.stringify({
         url: webhookUrl,
         // Incluimos chat_member para detectar nuevos miembros en el grupo.
-        allowed_updates: ['message', 'callback_query', 'chat_member', 'my_chat_member'],
+        // Incluimos chat_join_request para modo "solicitudes de ingreso" (Join Requests).
+        allowed_updates: ['message', 'callback_query', 'chat_member', 'my_chat_member', 'chat_join_request'],
       }),
     });
 

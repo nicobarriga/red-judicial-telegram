@@ -52,13 +52,16 @@ export async function getOrCreateUser(
       }
     }
 
-    // Actualizar información si cambió
+    // Actualizar información básica si cambió.
+    // Importante: si el usuario ya completó el registro (WebApp), NO sobrescribimos
+    // first_name/last_name con los valores del perfil de Telegram.
+    const shouldUpdateNames = !(existingUser.onboarding_completed === true);
+
     const { data: updatedUser, error: updateError } = await client
       .from('telegram_users')
       .update({
         username: username || null,
-        first_name: firstName,
-        last_name: lastName || null,
+        ...(shouldUpdateNames ? { first_name: firstName, last_name: lastName || null } : {}),
         updated_at: new Date().toISOString(),
       })
       .eq('telegram_id', telegramId)

@@ -31,6 +31,10 @@ export async function handleWebAppData(ctx: Context): Promise<void> {
     const raw = msg?.web_app_data?.data;
     if (typeof raw !== 'string' || raw.length < 2) return;
 
+    // Ack temprano para confirmar recepción del payload (útil para debugging UX)
+    // Nota: si esto resulta ruidoso, se puede remover después de estabilizar.
+    await ctx.reply('📩 Recibí tu formulario. Procesando…');
+
     let parsed: any;
     try {
       parsed = JSON.parse(raw);

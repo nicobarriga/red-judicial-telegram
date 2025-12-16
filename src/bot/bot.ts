@@ -49,13 +49,17 @@ export async function registerHandlers(): Promise<void> {
   bot.command('threadid', handleThreadId);
   bot.command('registro', handleRegistro);
 
-  // Web App payload (Telegram.WebApp.sendData)
-  bot.on('message:web_app_data', handleWebAppData);
-
   // Nota: el onboarding conversacional queda como legacy. El registro principal es vía Web App.
 
-  // Borrar mensajes de servicio join/leave (si está habilitado por env)
+  // Manejo global de mensajes:
+  // - Procesar WebApp data (registro) incluso si el filtro específico no se dispara en algún cliente.
+  // - Borrar mensajes de servicio join/leave (si está habilitado por env).
   bot.on('message', async (ctx, next) => {
+    const msg: any = ctx.message;
+    if (msg?.web_app_data) {
+      await handleWebAppData(ctx);
+      // No retornamos: si alguien quiere además borrar service messages u otros, seguimos.
+    }
     await handleDeleteServiceMessages(ctx);
     return await next();
   });

@@ -139,6 +139,11 @@ export async function updateUserProfile(
 
   if (error) {
     console.error('Error actualizando perfil:', error);
+    // Propagar un mensaje útil si el esquema no está actualizado
+    const message = (error as any)?.message || '';
+    if (/column .* does not exist|schema cache|PGRST/i.test(message)) {
+      throw new Error(`DB_SCHEMA_MISMATCH: ${message}`);
+    }
     throw new Error('No se pudo actualizar el perfil');
   }
 

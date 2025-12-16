@@ -28,8 +28,15 @@ CREATE TABLE IF NOT EXISTS telegram_users (
   username TEXT,
   first_name TEXT NOT NULL,
   last_name TEXT,
+  phone_number TEXT,
+  email TEXT,
+  is_lawyer BOOLEAN,
+  profession_or_study TEXT,
+  onboarding_step TEXT,
+  onboarding_completed BOOLEAN DEFAULT false,
   joined_at TIMESTAMP DEFAULT NOW(),
-  origen TEXT NOT NULL DEFAULT 'direct_bot'
+  origen TEXT NOT NULL DEFAULT 'direct_bot',
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Tabla de intereses en temas (métricas)
@@ -51,6 +58,10 @@ ON telegram_topics(slug);
 -- Índice para usuarios por telegram_id
 CREATE INDEX IF NOT EXISTS idx_telegram_id 
 ON telegram_users(telegram_id);
+
+-- Índice para búsquedas por teléfono (asociación por número)
+CREATE INDEX IF NOT EXISTS idx_phone_number
+ON telegram_users(phone_number);
 
 -- Comentarios para documentación
 COMMENT ON TABLE telegram_group IS 'Grupo principal de Red Judicial con temas organizados';

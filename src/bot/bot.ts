@@ -31,16 +31,44 @@ export async function registerHandlers(): Promise<void> {
   const { handleMenu } = await import('../handlers/menu');
   const { handleGrupos } = await import('../handlers/grupos');
   const { handleSoporte } = await import('../handlers/soporte');
+  const { handleChatId } = await import('../handlers/chatid');
+  const { handleThreadId } = await import('../handlers/threadid');
   const { handleCallbacks } = await import('../handlers/callbacks');
+  const { ensureUserAndGetStep, handleOnboardingContact, handleOnboardingText, startOrContinueOnboarding } =
+    await import('../handlers/onboarding');
+  const { handleGroupWelcome } = await import('../handlers/welcome-group');
 
   // Comandos
   bot.command('start', handleStart);
   bot.command('menu', handleMenu);
   bot.command('grupos', handleGrupos);
   bot.command('soporte', handleSoporte);
+  bot.command('chatid', handleChatId);
+  bot.command('threadid', handleThreadId);
+
+  // Captura de onboarding también si el usuario escribe sin /start (en privado)
+  bot.on('message:contact', async (ctx, next) => {
+    await ensureUserAndGetStep(ctx);
+    const handled = await handleOnboardingContact(ctx);
+    if (!handled) await next();
+  });
+
+  bot.on('message:text', async (ctx, next) => {
+    if (ctx.message?.text?.startsWith('/')) return await next();
+    const step = await ensureUserAndGetStep(ctx);
+    if (!step) return await next();
+
+    const handled = await handleOnboardingText(ctx);
+    if (!handled) {
+      await startOrContinueOnboarding(ctx);
+    }
+  });
 
   // Callbacks
   bot.on('callback_query:data', handleCallbacks);
+
+  // Bienvenida automática al entrar al grupo (chat_member)
+  bot.on('chat_member', handleGroupWelcome);
 
   console.log('✅ Handlers registrados correctamente');
 }

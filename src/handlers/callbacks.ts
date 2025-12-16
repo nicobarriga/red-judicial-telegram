@@ -1,5 +1,6 @@
 import { Context, InlineKeyboard } from 'grammy';
 import { getMainGroup, getTopicBySlug, recordTopicInterest } from '../database/client';
+import { handleOnboardingLawyerChoice } from './onboarding';
 
 /**
  * Handler para los callback queries (botones inline)
@@ -14,7 +15,10 @@ export async function handleCallbacks(ctx: Context): Promise<void> {
     const callbackData = ctx.callbackQuery.data;
 
     // Parsear el callback data
-    if (callbackData.startsWith('topic:')) {
+    if (callbackData.startsWith('onb:lawyer:')) {
+      const value = callbackData.replace('onb:lawyer:', '');
+      await handleOnboardingLawyerChoice(ctx, value === 'yes');
+    } else if (callbackData.startsWith('topic:')) {
       const slug = callbackData.replace('topic:', '');
       await handleTopicClick(ctx, slug);
     } else {

@@ -34,11 +34,13 @@ async function setWebhook(): Promise<void> {
       },
       body: JSON.stringify({
         url: webhookUrl,
-        allowed_updates: ['message', 'callback_query'],
+        // Incluimos chat_member para detectar nuevos miembros en el grupo.
+        allowed_updates: ['message', 'callback_query', 'chat_member', 'my_chat_member'],
       }),
     });
 
-    const data = await response.json();
+    // En Node/TS modernos, response.json() retorna unknown; tipamos de forma segura.
+    const data = (await response.json()) as { ok: boolean; [key: string]: unknown };
 
     if (data.ok) {
       console.log('✅ Webhook configurado exitosamente');
@@ -67,7 +69,7 @@ async function getWebhookInfo(): Promise<void> {
 
   try {
     const response = await fetch(apiUrl);
-    const data = await response.json();
+    const data = (await response.json()) as { ok: boolean; [key: string]: unknown };
 
     console.log('\n📊 Información actual del webhook:');
     console.log(JSON.stringify(data, null, 2));

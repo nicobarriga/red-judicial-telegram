@@ -34,6 +34,24 @@ export async function getOrCreateUser(
     .single();
 
   if (existingUser) {
+    // Inicializar step si falta (para onboarding)
+    const needsStepInit =
+      (existingUser.onboarding_completed === false || existingUser.onboarding_completed == null) &&
+      !existingUser.onboarding_step;
+
+    if (needsStepInit) {
+      const { data: steppedUser, error: stepErr } = await client
+        .from('telegram_users')
+        .update({ onboarding_step: 'ask_full_name', onboarding_completed: false, updated_at: new Date().toISOString() })
+        .eq('telegram_id', telegramId)
+        .select()
+        .single();
+
+      if (!stepErr && steppedUser) {
+        return steppedUser;
+      }
+    }
+
     // Actualizar información si cambió
     const { data: updatedUser, error: updateError } = await client
       .from('telegram_users')
@@ -41,6 +59,7 @@ export async function getOrCreateUser(
         username: username || null,
         first_name: firstName,
         last_name: lastName || null,
+        updated_at: new Date().toISOString(),
       })
       .eq('telegram_id', telegramId)
       .select()
@@ -63,6 +82,9 @@ export async function getOrCreateUser(
       first_name: firstName,
       last_name: lastName || null,
       origen,
+      onboarding_step: 'ask_full_name',
+      onboarding_completed: false,
+      updated_at: new Date().toISOString(),
     })
     .select()
     .single();
@@ -75,6 +97,53 @@ export async function getOrCreateUser(
   return newUser;
 }
 
+export async function getUserByTelegramId(telegramId: number): Promise<TelegramUser | null> {
+  const client = initSupabase();
+  const { data, error } = await client
+    .from('telegram_users')
+    .select('*')
+    .eq('telegram_id', telegramId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    console.error('Error obteniendo usuario:', error);
+    throw new Error('Error al buscar el usuario');
+  }
+
+  return data;
+}
+
+export async function updateUserProfile(
+  telegramId: number,
+  patch: Partial<Pick<
+    TelegramUser,
+    | 'first_name'
+    | 'last_name'
+    | 'phone_number'
+    | 'email'
+    | 'is_lawyer'
+    | 'profession_or_study'
+    | 'onboarding_step'
+    | 'onboarding_completed'
+  >>
+): Promise<TelegramUser> {
+  const client = initSupabase();
+
+  const { data, error } = await client
+    .from('telegram_users')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('telegram_id', telegramId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error actualizando perfil:', error);
+    throw new Error('No se pudo actualizar el perfil');
+  }
+
+  return data;
+}
 /**
  * Obtiene el grupo principal
  */

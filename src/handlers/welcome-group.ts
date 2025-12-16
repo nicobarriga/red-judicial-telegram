@@ -52,8 +52,7 @@ export async function handleGroupWelcome(ctx: Context): Promise<void> {
   }
 
   const text =
-    `👋 ¡Bienvenido/a ${mention} a **Red Judicial**!\n\n` +
-    `Bienvenido/a a **Red Judicial**, comunidad jurídica profesional en Telegram.\n\n` +
+    `${mention} — **Guía rápida de uso**\n\n` +
     `**Uso recomendado**\n` +
     `- Utiliza el tema correspondiente a tu materia\n` +
     `- Preguntas claras, con contexto mínimo (hechos + etapa + qué necesitas)\n` +

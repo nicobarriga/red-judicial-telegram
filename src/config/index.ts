@@ -15,6 +15,7 @@ export const config: Config = {
     ? parseInt(process.env.WELCOME_AUTO_DELETE_SECONDS, 10)
     : undefined,
   welcomeTopicId: process.env.WELCOME_TOPIC_ID ? parseInt(process.env.WELCOME_TOPIC_ID, 10) : undefined,
+  deleteServiceMessages: ['1', 'true', 'yes', 'on'].includes((process.env.DELETE_SERVICE_MESSAGES || '').toLowerCase()),
   port: parseInt(process.env.PORT || '3000', 10),
 };
 

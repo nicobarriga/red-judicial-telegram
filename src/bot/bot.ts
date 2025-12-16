@@ -37,6 +37,7 @@ export async function registerHandlers(): Promise<void> {
   const { ensureUserAndGetStep, handleOnboardingContact, handleOnboardingText, startOrContinueOnboarding } =
     await import('../handlers/onboarding');
   const { handleGroupWelcome } = await import('../handlers/welcome-group');
+  const { handleDeleteServiceMessages } = await import('../handlers/delete-service-messages');
 
   // Comandos
   bot.command('start', handleStart);
@@ -62,6 +63,12 @@ export async function registerHandlers(): Promise<void> {
     if (!handled) {
       await startOrContinueOnboarding(ctx);
     }
+  });
+
+  // Borrar mensajes de servicio join/leave (si está habilitado por env)
+  bot.on('message', async (ctx, next) => {
+    await handleDeleteServiceMessages(ctx);
+    return await next();
   });
 
   // Callbacks

@@ -1,6 +1,6 @@
 import { Context, InlineKeyboard } from 'grammy';
-import { getMainGroup, getTopicBySlug, recordTopicInterest } from '../database/client';
-import { handleOnboardingLawyerChoice } from './onboarding';
+import { getMainGroup, getTopicBySlug, recordTopicInterest, updateUserProfile } from '../database/client';
+import { handleOnboardingLawyerChoice, startOrContinueOnboarding } from './onboarding';
 
 /**
  * Handler para los callback queries (botones inline)
@@ -15,7 +15,24 @@ export async function handleCallbacks(ctx: Context): Promise<void> {
     const callbackData = ctx.callbackQuery.data;
 
     // Parsear el callback data
-    if (callbackData.startsWith('onb:lawyer:')) {
+    if (callbackData.startsWith('onb:name:')) {
+      const action = callbackData.replace('onb:name:', '');
+      if (!ctx.from) {
+        await ctx.answerCallbackQuery('❌ Usuario no identificado');
+        return;
+      }
+      if (action === 'ok') {
+        await updateUserProfile(ctx.from.id, { onboarding_step: 'ask_lawyer' });
+        await ctx.answerCallbackQuery('✅ Confirmado');
+        await startOrContinueOnboarding(ctx);
+      } else if (action === 'edit') {
+        await updateUserProfile(ctx.from.id, { onboarding_step: 'ask_full_name' });
+        await ctx.answerCallbackQuery('✏️ Ok, corrígelo');
+        await startOrContinueOnboarding(ctx);
+      } else {
+        await ctx.answerCallbackQuery('❌ Acción no reconocida');
+      }
+    } else if (callbackData.startsWith('onb:lawyer:')) {
       const value = callbackData.replace('onb:lawyer:', '');
       await handleOnboardingLawyerChoice(ctx, value === 'yes');
     } else if (callbackData.startsWith('topic:')) {

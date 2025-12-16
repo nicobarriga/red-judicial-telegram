@@ -33,9 +33,10 @@ export async function registerHandlers(): Promise<void> {
   const { handleSoporte } = await import('../handlers/soporte');
   const { handleChatId } = await import('../handlers/chatid');
   const { handleThreadId } = await import('../handlers/threadid');
+  const { handleRegistro } = await import('../handlers/registro');
   const { handleCallbacks } = await import('../handlers/callbacks');
-  const { ensureUserAndGetStep, handleOnboardingContact, handleOnboardingText, startOrContinueOnboarding } =
-    await import('../handlers/onboarding');
+  const { handleWebAppData } = await import('../handlers/webapp');
+  const { sendMenu } = await import('../handlers/onboarding');
   const { handleGroupWelcome } = await import('../handlers/welcome-group');
   const { handleDeleteServiceMessages } = await import('../handlers/delete-service-messages');
 
@@ -46,26 +47,12 @@ export async function registerHandlers(): Promise<void> {
   bot.command('soporte', handleSoporte);
   bot.command('chatid', handleChatId);
   bot.command('threadid', handleThreadId);
+  bot.command('registro', handleRegistro);
 
-  // Captura de onboarding también si el usuario escribe sin /start (en privado)
-  bot.on('message:contact', async (ctx, next) => {
-    if (ctx.chat?.type !== 'private') return await next();
-    await ensureUserAndGetStep(ctx);
-    const handled = await handleOnboardingContact(ctx);
-    if (!handled) await next();
-  });
+  // Web App payload (Telegram.WebApp.sendData)
+  bot.on('message:web_app_data', handleWebAppData);
 
-  bot.on('message:text', async (ctx, next) => {
-    if (ctx.chat?.type !== 'private') return await next();
-    if (ctx.message?.text?.startsWith('/')) return await next();
-    const step = await ensureUserAndGetStep(ctx);
-    if (!step) return await next();
-
-    const handled = await handleOnboardingText(ctx);
-    if (!handled) {
-      await startOrContinueOnboarding(ctx);
-    }
-  });
+  // Nota: el onboarding conversacional queda como legacy. El registro principal es vía Web App.
 
   // Borrar mensajes de servicio join/leave (si está habilitado por env)
   bot.on('message', async (ctx, next) => {

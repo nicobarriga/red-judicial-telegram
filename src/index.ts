@@ -3,6 +3,7 @@ import { webhookCallback } from 'grammy';
 import { config, validateConfig } from './config';
 import { bot, initBot } from './bot/bot';
 import { initSupabase } from './database/client';
+import { getRegistroWebAppHtml } from './webapp/registroPage';
 
 const app = express();
 
@@ -37,6 +38,12 @@ function setupRoutes(): void {
   // Health check
   app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Web App (registro)
+  app.get('/webapp/registro', (req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(getRegistroWebAppHtml({ botUsername: config.botUsername }));
   });
 
   // Webhook de Telegram

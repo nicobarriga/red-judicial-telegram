@@ -3,6 +3,7 @@ import { getActiveTopics, getMainGroup, getOrCreateUser, getUserByTelegramId, up
 
 export type OnboardingStep =
   | 'ask_full_name'
+  | 'confirm_name'
   | 'ask_lawyer'
   | 'ask_profession_or_study'
   | 'ask_email'
@@ -28,6 +29,16 @@ function parseFullName(input: string): { firstName: string; lastName: string } |
     return { firstName: parts.slice(0, -2).join(' '), lastName: parts.slice(-2).join(' ') };
   }
   return { firstName: parts[0], lastName: parts[1] };
+}
+
+function looksLikeInitials(name: string): boolean {
+  // Detecta entradas tipo "M" o "A" o "M." (muy comunes)
+  const s = name.trim();
+  return /^[A-Za-zÁÉÍÓÚÜÑ]\.?$/.test(s);
+}
+
+function normalizeNamePart(s: string): string {
+  return s.trim().replace(/\s+/g, ' ');
 }
 
 export async function ensureUserAndGetStep(ctx: Context): Promise<OnboardingStep | null> {
@@ -69,6 +80,12 @@ export async function startOrContinueOnboarding(ctx: Context): Promise<void> {
       { parse_mode: 'Markdown' }
     );
     await updateUserProfile(from.id, { onboarding_step: 'ask_full_name' });
+    return;
+  }
+
+  if (step === 'confirm_name') {
+    // Si el usuario quedó en confirmación, recordarle qué hacer (botones ya enviados)
+    await ctx.reply('Confirma tu nombre con los botones ✅/✏️ para continuar.');
     return;
   }
 
@@ -131,15 +148,46 @@ export async function handleOnboardingText(ctx: Context): Promise<boolean> {
 
   if (step === 'ask_full_name') {
     const parsed = parseFullName(text);
-    if (!parsed || parsed.firstName.length < 2 || parsed.lastName.length < 2) {
+    if (!parsed) {
       await ctx.reply(
         'No pude interpretar tu nombre.\n\nEscríbelo así, por favor:\n`Nombre(s), Apellido(s)`\nEjemplo: `Juan Pablo, Pérez Soto`',
         { parse_mode: 'Markdown' }
       );
       return true;
     }
-    await updateUserProfile(from.id, { first_name: parsed.firstName, last_name: parsed.lastName, onboarding_step: 'ask_lawyer' });
-    await startOrContinueOnboarding(ctx);
+
+    const firstName = normalizeNamePart(parsed.firstName);
+    const lastName = normalizeNamePart(parsed.lastName);
+
+    if (
+      firstName.length < 2 ||
+      lastName.length < 2 ||
+      looksLikeInitials(firstName) ||
+      looksLikeInitials(lastName)
+    ) {
+      await ctx.reply(
+        'Parece que ingresaste iniciales.\n\nPor favor escribe tu **nombre y apellido(s) completos**.\nEjemplo: `Matías, Arellano` o `Juan Pablo, Pérez Soto`',
+        { parse_mode: 'Markdown' }
+      );
+      return true;
+    }
+
+    // Confirmación rápida para evitar errores (ej: "M" / "A")
+    const confirmKb = new InlineKeyboard()
+      .text('✅ Confirmar', 'onb:name:ok')
+      .row()
+      .text('✏️ Corregir', 'onb:name:edit');
+
+    await updateUserProfile(from.id, {
+      first_name: firstName,
+      last_name: lastName,
+      onboarding_step: 'confirm_name',
+    });
+
+    await ctx.reply(`Te registré como:\n\n**${firstName} ${lastName}**\n\n¿Está correcto?`, {
+      parse_mode: 'Markdown',
+      reply_markup: confirmKb,
+    });
     return true;
   }
 

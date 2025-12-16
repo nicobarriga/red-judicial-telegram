@@ -6,7 +6,7 @@ INSERT INTO telegram_group (nombre, invite_link, descripcion, activo) VALUES
 ON CONFLICT DO NOTHING;
 
 -- Datos iniciales para los temas dentro del grupo
--- ✅ ACTUALIZADO: 15 temas sin "General" (eliminado)
+-- ✅ ACTUALIZADO: temas del grupo (sin "General")
 
 INSERT INTO telegram_topics (slug, titulo, descripcion, orden, activo) VALUES
 ('civil', 'Derecho Civil', 'Discusiones sobre derecho civil, contratos, responsabilidad civil, sucesiones y más', 1, true),
@@ -23,6 +23,8 @@ INSERT INTO telegram_topics (slug, titulo, descripcion, orden, activo) VALUES
 ('insolvencia', 'Insolvencia y Reemprendimiento', 'Quiebras, reorganización empresarial, ley de insolvencia y reemprendimiento', 12, true),
 ('ambiental', 'Derecho Ambiental y Minero', 'Derecho ambiental, evaluación de impacto, recursos naturales, minería y sanciones ambientales', 13, true),
 ('legal_tech', 'Legal Tech', 'Tecnología aplicada al derecho, automatización, IA legal, herramientas y transformación digital', 14, true),
-('oportunidades', 'Oportunidades Laborales', 'Ofertas de trabajo, pasantías, colaboraciones profesionales y networking laboral', 15, true)
+('oportunidades', 'Oportunidades Laborales', 'Ofertas de trabajo, pasantías, colaboraciones profesionales y networking laboral', 15, true),
+('jurisprudencia', 'Jurisprudencia', 'Jurisprudencia útil resumida, fallos relevantes y criterios aplicables a la práctica', 16, true),
+('estudiantes', 'Estudiantes', 'Espacio para estudiantes y carreras afines: dudas, orientación, materiales y apoyo', 17, true)
 ON CONFLICT (slug) DO NOTHING;
 

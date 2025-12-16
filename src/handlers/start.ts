@@ -1,6 +1,7 @@
 import { CommandContext, Context } from 'grammy';
 import { getOrCreateUser, getUserByTelegramId } from '../database/client';
-import { sendMenu, startOrContinueOnboarding } from './onboarding';
+import { InlineKeyboard } from 'grammy';
+import { sendMenu } from './onboarding';
 import { config } from '../config';
 
 /**
@@ -18,7 +19,7 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
       const deepLink = config.botUsername ? `https://t.me/${config.botUsername}?start=registro` : undefined;
       const msg =
         '👋 ¡Bienvenido/a a Red Judicial!\n\n' +
-        'Para completar tu registro y ver los temas, por favor escríbeme por **privado**.\n' +
+        'Para completar/actualizar tu registro y ver los temas, por favor escríbeme por **privado**.\n' +
         (deepLink ? `👉 ${deepLink}` : '👉 Abre el bot y presiona “Iniciar”');
       await ctx.reply(msg, { parse_mode: 'Markdown', link_preview_options: { is_disabled: true } });
       return;
@@ -33,13 +34,31 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
       'direct_bot'
     );
 
+    const payload = String((ctx as any).match || '').trim();
     const dbUser = await getUserByTelegramId(user.id);
+    const webAppUrl = config.webhookDomain ? `${config.webhookDomain}/webapp/registro` : undefined;
+
     if (dbUser && dbUser.onboarding_completed) {
+      // Si vino por deep link de registro pero ya está registrado, mostrar menú y explicar cómo actualizar
+      if (payload === 'registro') {
+        await ctx.reply('✅ Ya estás registrado.\n\nSi quieres **actualizar tus datos**, usa /registro.', { parse_mode: 'Markdown' });
+      }
       await sendMenu(ctx);
       return;
     }
 
-    await startOrContinueOnboarding(ctx);
+    // Usuario no registrado: ofrecer Web App
+    if (!webAppUrl) {
+      await ctx.reply('⚠️ Falta configurar WEBHOOK_DOMAIN. No puedo abrir el formulario de registro.');
+      return;
+    }
+
+    const kb = new InlineKeyboard().webApp('📝 Completar registro', webAppUrl);
+    await ctx.reply(
+      '¡Bienvenido/a a **Red Judicial**! 👋\n\n' +
+        'Para acceder a los temas, completa tu registro en 1 minuto:',
+      { parse_mode: 'Markdown', reply_markup: kb }
+    );
 
   } catch (error) {
     console.error('Error en handleStart:', error);

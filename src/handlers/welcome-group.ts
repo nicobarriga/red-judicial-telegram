@@ -39,7 +39,7 @@ export async function handleGroupWelcome(ctx: Context): Promise<void> {
 
   const text =
     `👋 ¡Bienvenido/a ${mention} a Red Judicial!\n\n` +
-    `Para acceder a los temas y completar tu registro, presiona **Empezar** (abre el bot en privado).`;
+    `Para acceder a los temas y completar o actualizar tu registro, presiona **Empezar** (abre el bot en privado).`;
 
   try {
     const keyboard = deepLink ? new InlineKeyboard().url('🚀 Empezar', deepLink) : undefined;

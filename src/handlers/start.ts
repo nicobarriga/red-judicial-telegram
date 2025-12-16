@@ -21,8 +21,6 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
       'direct_bot'
     );
 
-    await ctx.reply('¡Bienvenido a Red Judicial! 👋\n\nAntes de mostrarte los temas, necesito completar tu registro (1 minuto).');
-
     const dbUser = await getUserByTelegramId(user.id);
     if (dbUser && dbUser.onboarding_completed) {
       await sendMenu(ctx);

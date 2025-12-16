@@ -53,7 +53,19 @@ export async function startOrContinueOnboarding(ctx: Context): Promise<void> {
 
   if (step === 'ask_full_name') {
     await ctx.reply(
-      `Antes de mostrarte los temas, necesito completar tu registro.\n\n✍️ Escribe tu **Nombre y Apellido(s)**.\n\nFormato recomendado:\n- \`Nombre(s), Apellido(s)\`\nEjemplo: \`Juan Pablo, Pérez Soto\``,
+      `¡Bienvenido/a a **Red Judicial**! 👋\n\n` +
+        `Esta es una comunidad para **abogados**, **estudiantes de Derecho** y **carreras afines al ámbito jurídico**.\n` +
+        `Aquí puedes **hacer consultas**, aprender de otros y participar en conversaciones ordenadas por especialidad (temas).\n\n` +
+        `Antes de mostrarte los temas, necesitamos un registro rápido (**1 minuto**).\n` +
+        `**¿Para qué?**\n` +
+        `- Para **orientarte mejor** y enviarte al tema correcto según tu necesidad.\n` +
+        `- Para **cuidar la comunidad** y reducir cuentas falsas/spam.\n` +
+        `- Para mejorar la calidad de respuestas entendiendo tu contexto (abogado/a, estudiante, etc.).\n` +
+        `\n` +
+        `🔒 Tus datos se usan solo para registro, verificación y soporte de la comunidad. No spam.\n\n` +
+        `✍️ Escribe tu **Nombre y Apellido(s)**\n` +
+        `Formato recomendado: \`Nombre(s), Apellido(s)\`\n` +
+        `Ejemplo: \`Juan Pablo, Pérez Soto\``,
       { parse_mode: 'Markdown' }
     );
     await updateUserProfile(from.id, { onboarding_step: 'ask_full_name' });
@@ -77,7 +89,15 @@ export async function startOrContinueOnboarding(ctx: Context): Promise<void> {
   }
 
   if (step === 'ask_email') {
-    await ctx.reply('📧 ¿Cuál es tu **correo electrónico**?', { parse_mode: 'Markdown' });
+    await ctx.reply(
+      `Gracias 🙌\n\n` +
+        `Ahora te pediremos **correo** y luego **teléfono** (**obligatorio**) para:\n` +
+        `- **Verificación y seguridad** de la comunidad\n` +
+        `- Poder contactarte si hay un **tema importante** (cambios de acceso, soporte o incidentes)\n\n` +
+        `**No se usan para marketing** ni se comparten con terceros.\n\n` +
+        `📧 ¿Cuál es tu **correo electrónico**?`,
+      { parse_mode: 'Markdown' }
+    );
     await updateUserProfile(from.id, { onboarding_step: 'ask_email' });
     return;
   }
@@ -88,7 +108,10 @@ export async function startOrContinueOnboarding(ctx: Context): Promise<void> {
       return;
     }
     const kb = new Keyboard().requestContact('📱 Compartir mi número').resized().oneTime();
-    await ctx.reply('📱 Para asociarte por número, comparte tu **teléfono** con el botón:', { reply_markup: kb });
+    await ctx.reply(
+      '📱 Para asociarte por número (obligatorio), comparte tu **teléfono** con el botón:',
+      { reply_markup: kb }
+    );
     await updateUserProfile(from.id, { onboarding_step: 'ask_phone' });
     return;
   }

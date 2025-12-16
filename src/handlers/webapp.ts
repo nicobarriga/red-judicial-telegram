@@ -37,8 +37,8 @@ export async function handleWebAppData(ctx: Context): Promise<void> {
     const raw = msg?.web_app_data?.data;
     if (typeof raw !== 'string' || raw.length < 2) return;
 
-    // Ack temprano para confirmar recepción del payload (útil para debugging UX)
-    await ctx.reply('📩 Recibí tu formulario. Procesando…');
+    // Ack temprano (útil para UX y debugging)
+    await ctx.reply('Recibido. Procesando…');
 
     let parsed: any;
     try {
@@ -125,8 +125,8 @@ export async function handleWebAppData(ctx: Context): Promise<void> {
           telegramUserId: from.id,
         });
         await ctx.reply(
-          '✅ Registro listo.\n\n' +
-            'Presiona este link **personal** (de **1 uso**) y tendrás acceso inmediato al grupo:\n' +
+          '✅ Listo.\n\n' +
+            'Link personal (1 uso):\n' +
             `${invite}\n\n` +
             'Si te da error o ya lo usaste, vuelve a abrir el bot y usa /registro para generar uno nuevo.',
           { link_preview_options: { is_disabled: true }, parse_mode: 'Markdown' }

@@ -70,7 +70,7 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
         <div class="pill">Registro (1 minuto)</div>
         <h1>Red Judicial</h1>
         <p>
-          Completa tu registro para acceder a los temas. Tus datos se usan solo para registro, verificación y soporte de la comunidad. No spam.
+          Registro para acceso a la comunidad privada. Uso de datos: acceso y soporte. Sin spam.
         </p>
 
         <div class="row">
@@ -107,7 +107,7 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
 
         <div id="err" class="error"></div>
         <div class="footer">
-          Al enviar, aceptas que usemos estos datos solo para fines de la comunidad (registro, verificación y soporte).
+          Al enviar, aceptas su uso solo para acceso y soporte de la comunidad.
         </div>
       </div>
     </div>

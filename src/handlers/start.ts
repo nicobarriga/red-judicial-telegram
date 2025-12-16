@@ -19,8 +19,7 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
     if (ctx.chat?.type !== 'private') {
       const deepLink = config.botUsername ? `https://t.me/${config.botUsername}?start=registro` : undefined;
       const msg =
-        '👋 ¡Bienvenido/a a Red Judicial!\n\n' +
-        'Para completar/actualizar tu registro y ver los temas, por favor escríbeme por **privado**.\n' +
+        'Para ingresar a **Red Judicial**, el acceso se gestiona por **privado**.\n' +
         (deepLink ? `👉 ${deepLink}` : '👉 Abre el bot y presiona “Iniciar”');
       await ctx.reply(msg, { parse_mode: 'Markdown', link_preview_options: { is_disabled: true } });
       return;
@@ -56,9 +55,9 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
               telegramUserId: user.id,
             });
             await ctx.reply(
-              '🔐 Aquí tienes tu link **personal** para entrar al grupo (es de **1 uso**):\n' +
+              '🔐 Tu link personal (1 uso):\n' +
                 `${invite}\n\n` +
-                'Si ya lo usaste o te da error, usa /registro para generar uno nuevo.',
+                'Si te da error o ya lo usaste, usa /registro para generar otro.',
               { parse_mode: 'Markdown', link_preview_options: { is_disabled: true } }
             );
           } catch (e) {
@@ -83,9 +82,8 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
 
     const kb = new InlineKeyboard().webApp('📝 Completar registro', webAppUrl);
     await ctx.reply(
-      '¡Bienvenido/a a **Red Judicial**! 👋\n\n' +
-        'Para acceder a la comunidad privada, completa tu registro en 1 minuto.\n' +
-        'Luego te entrego un link **personal** de acceso (1 uso):',
+      'Bienvenido/a a **Red Judicial**.\n\n' +
+        'Completa tu registro (1 minuto) y te envío tu **link personal** de acceso (1 uso).',
       { parse_mode: 'Markdown', reply_markup: kb }
     );
 

@@ -120,8 +120,8 @@ function setupRoutes(): void {
             telegramUserId: userId,
           });
           const text =
-            '✅ Registro listo.\n\n' +
-            'Presiona este link **personal** (de **1 uso**) y tendrás acceso inmediato al grupo:\n' +
+            '✅ Listo.\n\n' +
+            'Link personal (1 uso):\n' +
             `${invite}\n\n` +
             'Si te da error o ya lo usaste, vuelve a abrir el bot y usa /registro para generar uno nuevo.';
           bot.api

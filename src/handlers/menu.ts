@@ -31,14 +31,13 @@ export async function handleMenu(ctx: CommandContext<Context>): Promise<void> {
       }
     }
 
-    // Botón para unirse al grupo principal
-    keyboard.url('🚀 Unirme a Red Judicial', mainGroup.invite_link);
+    // Nota: el grupo es privado y el acceso es por link personal (1 uso).
+    // Evitamos publicar invite_link del grupo (puede filtrarse o quedar inválido).
 
-    const menuMessage = `
-📋 **Menú de Especialidades**
-
-Selecciona un tema para conocer más detalles o únete directamente al grupo principal:
-`;
+    const menuMessage =
+      '📋 **Menú de Especialidades**\n\n' +
+      'Selecciona un tema.\n\n' +
+      '🔐 Para entrar al grupo privado, usa /start (te genero un link personal de 1 uso).';
 
     await ctx.reply(menuMessage, {
       reply_markup: keyboard,

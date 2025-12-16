@@ -23,7 +23,12 @@ function sanitizePhone(s: string): string {
 
 export async function handleWebAppData(ctx: Context): Promise<void> {
   try {
-    if (ctx.chat?.type !== 'private') return;
+    if (ctx.chat?.type !== 'private') {
+      // Si por alguna razón llega desde un grupo (p.ej. WebApp abierta desde un botón en grupo),
+      // informamos para que el usuario entienda por qué no ve confirmación.
+      await ctx.reply('Para completar el registro, por favor abre el bot por **privado** y usa /registro.');
+      return;
+    }
     const from = ctx.from;
     if (!from) return;
 
@@ -32,7 +37,6 @@ export async function handleWebAppData(ctx: Context): Promise<void> {
     if (typeof raw !== 'string' || raw.length < 2) return;
 
     // Ack temprano para confirmar recepción del payload (útil para debugging UX)
-    // Nota: si esto resulta ruidoso, se puede remover después de estabilizar.
     await ctx.reply('📩 Recibí tu formulario. Procesando…');
 
     let parsed: any;

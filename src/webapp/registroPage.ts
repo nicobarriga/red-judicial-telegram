@@ -62,6 +62,16 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
         margin-bottom: 10px;
       }
       .hidden { display: none; }
+      .btn {
+        width: 100%;
+        margin-top: 14px;
+        border: 1px solid rgba(255,255,255,0.14);
+        background: rgba(255,255,255,0.10);
+        color: rgba(255,255,255,0.92);
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 15px;
+      }
     </style>
   </head>
   <body>
@@ -106,6 +116,7 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
         </div>
 
         <div id="err" class="error"></div>
+        <button id="sendBtn" class="btn" type="button">Enviar registro</button>
         <div class="footer">
           Al enviar, aceptas que usemos estos datos solo para fines de la comunidad (registro, verificación y soporte).
         </div>
@@ -188,7 +199,12 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
 
           try {
             tg.sendData(JSON.stringify(data));
-            tg.close();
+            // En algunos clientes (desktop) el cierre inmediato puede impedir que el usuario note el envío.
+            // Mostramos confirmación y cerramos con un pequeño delay.
+            if (tg.showAlert) {
+              tg.showAlert('Enviado. Vuelve al chat para ver la confirmación.');
+            }
+            setTimeout(() => tg.close(), 700);
           } catch (e) {
             showError('No se pudo enviar el registro. Intenta nuevamente.');
           }
@@ -197,6 +213,9 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
         if (tg) {
           tg.MainButton.onClick(send);
         }
+
+        // Fallback HTML button (por si el MainButton se comporta raro en desktop)
+        $('sendBtn').addEventListener('click', send);
       })();
     </script>
   </body>

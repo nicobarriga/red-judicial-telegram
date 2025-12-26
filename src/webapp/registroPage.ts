@@ -167,13 +167,16 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
             }
           };
 
-          // En desktop, primero intentamos abrir el chat y luego cerrar el WebApp con delays.
-          // Algunos clientes ignoran tg.close() si se llama "demasiado pronto".
-          setTimeout(openChat, 0);
-          setTimeout(() => { try { tg.close(); } catch (_) {} }, 80);
-          setTimeout(() => { try { tg.close(); } catch (_) {} }, 250);
-          setTimeout(() => { try { tg.close(); } catch (_) {} }, 600);
-          setTimeout(() => { try { window.close(); } catch (_) {} }, 900);
+          // En desktop, primero disparamos navegación al chat y recién después cerramos.
+          // Si cerramos "demasiado rápido", algunos clientes abortan la navegación.
+          try { openChat(); } catch (_) {}
+          setTimeout(() => { try { openChat(); } catch (_) {} }, 60);
+
+          // Cierre con delays más largos (para no cortar el cambio de foco al chat).
+          setTimeout(() => { try { tg.close(); } catch (_) {} }, 700);
+          setTimeout(() => { try { tg.close(); } catch (_) {} }, 1200);
+          setTimeout(() => { try { tg.close(); } catch (_) {} }, 2000);
+          setTimeout(() => { try { window.close(); } catch (_) {} }, 2400);
         }
 
         function showDoneScreen() {

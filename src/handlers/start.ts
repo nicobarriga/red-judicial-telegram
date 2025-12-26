@@ -82,8 +82,7 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
 
     const kb = new InlineKeyboard().webApp('📝 Completar registro', webAppUrl);
     await ctx.reply(
-      '👋 Bienvenido/a a **Red Judicial**.\n\n' +
-        'Completa tu registro (1 minuto) y te envío tu link personal de acceso (1 uso).',
+      'Al completar tu registro se te enviará automáticamente un link de un solo uso para acceder.',
       { parse_mode: 'Markdown', reply_markup: kb }
     );
 

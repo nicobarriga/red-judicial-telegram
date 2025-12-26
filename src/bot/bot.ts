@@ -60,6 +60,10 @@ export async function registerHandlers(): Promise<void> {
       await handleWebAppData(ctx);
       // No retornamos: si alguien quiere además borrar service messages u otros, seguimos.
     }
+    // Bienvenida también vía service message (new_chat_members), más confiable que chat_member
+    if (Array.isArray(msg?.new_chat_members) && msg.new_chat_members.length > 0) {
+      await handleGroupWelcome(ctx);
+    }
     await handleDeleteServiceMessages(ctx);
     return await next();
   });

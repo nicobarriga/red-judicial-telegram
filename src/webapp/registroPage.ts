@@ -115,6 +115,7 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
     <script>
       (function () {
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        const BOT_USERNAME = ${JSON.stringify(botUsername)};
         if (tg) {
           tg.ready();
           tg.expand();
@@ -180,6 +181,8 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
             return;
           }
 
+          try { tg.MainButton.showProgress && tg.MainButton.showProgress(); } catch (_) {}
+
           const data = {
             initData: tg.initData || '',
             payload: payload,
@@ -198,11 +201,22 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
             })
               .then(r => r.json().catch(() => ({})))
               .then((j) => {
+                try { tg.MainButton.hideProgress && tg.MainButton.hideProgress(); } catch (_) {}
                 if (j && j.ok) {
+                  // Desktop: evitar popup "Cerrar" (showAlert) y volver al chat del bot.
                   // En algunos clientes tg.close() puede ser sensible al timing.
-                  // Hacemos cierre robusto: alert + doble intento + fallback window.close().
-                  if (tg.showAlert) tg.showAlert('✅ Listo. Volviendo al chat…');
+                  const isDesktop = String(tg.platform || '').toLowerCase() === 'tdesktop';
+                  if (!isDesktop && tg.showAlert) tg.showAlert('✅ Listo. Volviendo al chat…');
                   try { tg.MainButton.hide(); } catch (_) {}
+                  try { tg.MainButton.setText('Listo'); } catch (_) {}
+
+                  // En desktop, forzamos navegación al chat del bot (si tenemos username).
+                  if (isDesktop && BOT_USERNAME && tg.openTelegramLink) {
+                    try { tg.openTelegramLink('https://t.me/' + BOT_USERNAME); } catch (_) {}
+                  }
+
+                  // Cierre robusto
+                  try { tg.close(); } catch (_) {}
                   setTimeout(() => { try { tg.close(); } catch (_) {} }, 700);
                   setTimeout(() => { try { tg.close(); } catch (_) {} }, 1400);
                   setTimeout(() => { try { window.close(); } catch (_) {} }, 1700);
@@ -210,8 +224,12 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
                   showError('No se pudo guardar el registro. Intenta nuevamente.');
                 }
               })
-              .catch(() => showError('No se pudo guardar el registro. Intenta nuevamente.'));
+              .catch(() => {
+                try { tg.MainButton.hideProgress && tg.MainButton.hideProgress(); } catch (_) {}
+                showError('No se pudo guardar el registro. Intenta nuevamente.');
+              });
           } catch (e) {
+            try { tg.MainButton.hideProgress && tg.MainButton.hideProgress(); } catch (_) {}
             showError('No se pudo enviar el registro. Intenta nuevamente.');
           }
         }

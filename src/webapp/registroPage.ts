@@ -150,21 +150,35 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
           return String(s || '').trim().replace(/\\s+/g, ' ');
         }
 
+        function isDesktopPlatform() {
+          if (!tg) return false;
+          const p = String(tg.platform || '').toLowerCase();
+          // Telegram Desktop puede reportar: tdesktop, macos, windows (y a veces web en escritorio)
+          if (['android', 'android_x', 'ios'].includes(p)) return false;
+          return true;
+        }
+
         function goToBotChatAndClose() {
           if (!tg) return;
-          // Intento 1: deep link nativo (mejor para Desktop)
-          if (BOT_USERNAME && tg.openTelegramLink) {
-            try { tg.openTelegramLink('tg://resolve?domain=' + BOT_USERNAME); } catch (_) {}
-            try { tg.openTelegramLink('https://t.me/' + BOT_USERNAME); } catch (_) {}
-          }
-          try { tg.close(); } catch (_) {}
-          setTimeout(() => { try { tg.close(); } catch (_) {} }, 300);
-          setTimeout(() => { try { window.close(); } catch (_) {} }, 600);
+          const openChat = () => {
+            if (BOT_USERNAME && tg.openTelegramLink) {
+              try { tg.openTelegramLink('tg://resolve?domain=' + BOT_USERNAME); } catch (_) {}
+              try { tg.openTelegramLink('https://t.me/' + BOT_USERNAME); } catch (_) {}
+            }
+          };
+
+          // En desktop, primero intentamos abrir el chat y luego cerrar el WebApp con delays.
+          // Algunos clientes ignoran tg.close() si se llama "demasiado pronto".
+          setTimeout(openChat, 0);
+          setTimeout(() => { try { tg.close(); } catch (_) {} }, 80);
+          setTimeout(() => { try { tg.close(); } catch (_) {} }, 250);
+          setTimeout(() => { try { tg.close(); } catch (_) {} }, 600);
+          setTimeout(() => { try { window.close(); } catch (_) {} }, 900);
         }
 
         function showDoneScreen() {
           // Vista final (especialmente útil en Desktop cuando el auto-close no funciona)
-          const isDesktop = tg && String(tg.platform || '').toLowerCase() === 'tdesktop';
+          const isDesktop = isDesktopPlatform();
           const btnText = isDesktop ? 'Volver al chat' : 'Cerrar';
           // Importante: evitamos template strings anidadas que puedan romper el TS del servidor.
           document.body.innerHTML =
@@ -247,7 +261,7 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
               .then((j) => {
                 try { tg.MainButton.hideProgress && tg.MainButton.hideProgress(); } catch (_) {}
                 if (j && j.ok) {
-                  const isDesktop = String(tg.platform || '').toLowerCase() === 'tdesktop';
+                  const isDesktop = isDesktopPlatform();
                   if (!isDesktop && tg.showAlert) tg.showAlert('✅ Listo. Volviendo al chat…');
                   try { tg.MainButton.hide(); } catch (_) {}
                   try { tg.MainButton.setText('Listo'); } catch (_) {}

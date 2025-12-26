@@ -116,6 +116,7 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
       (function () {
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
         const BOT_USERNAME = ${JSON.stringify(botUsername)};
+        let LAST_INVITE_LINK = null;
         if (tg) {
           tg.ready();
           tg.expand();
@@ -179,10 +180,33 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
           setTimeout(() => { try { window.close(); } catch (_) {} }, 2400);
         }
 
-        function showDoneScreen() {
+        function showDoneScreen(inviteLink) {
           // Vista final (especialmente útil en Desktop cuando el auto-close no funciona)
           const isDesktop = isDesktopPlatform();
           const btnText = isDesktop ? 'Volver al chat' : 'Cerrar';
+          const extra =
+            inviteLink && typeof inviteLink === 'string'
+              ? (
+                  '<div style="margin-top:12px; font-size:12px; color: rgba(255,255,255,0.78)">' +
+                    'Si no ves el link en el chat, aquí está:' +
+                  '</div>' +
+                  '<div style="margin-top:8px; word-break: break-all; font-size:12px; color: rgba(255,255,255,0.92)">' +
+                    String(inviteLink) +
+                  '</div>' +
+                  '<div style="margin-top:10px">' +
+                    '<button id="copyBtn" style="' +
+                      'width:100%;' +
+                      'border-radius:12px;' +
+                      'border: 1px solid rgba(255,255,255,0.14);' +
+                      'background: rgba(255,255,255,0.06);' +
+                      'color: rgba(255,255,255,0.92);' +
+                      'padding: 10px 12px;' +
+                      'font-size: 14px;' +
+                      'cursor: pointer;' +
+                    '">Copiar link</button>' +
+                  '</div>'
+                )
+              : '';
           // Importante: evitamos template strings anidadas que puedan romper el TS del servidor.
           document.body.innerHTML =
             '<div class="wrap">' +
@@ -190,6 +214,7 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
                 '<div class="pill">✅ Listo</div>' +
                 '<h1>Registro completado</h1>' +
                 '<p>Volviendo al chat del bot para mostrar tu link de acceso…</p>' +
+                extra +
                 '<div style="margin-top:12px">' +
                   '<button id="backBtn" style="' +
                     'width:100%;' +
@@ -209,6 +234,16 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
             '</div>';
           const backBtn = document.getElementById('backBtn');
           if (backBtn) backBtn.addEventListener('click', goToBotChatAndClose);
+          const copyBtn = document.getElementById('copyBtn');
+          if (copyBtn && inviteLink && typeof inviteLink === 'string') {
+            copyBtn.addEventListener('click', function () {
+              try {
+                if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+                  navigator.clipboard.writeText(String(inviteLink));
+                }
+              } catch (_) {}
+            });
+          }
         }
 
         function buildPayload() {
@@ -264,13 +299,14 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
               .then((j) => {
                 try { tg.MainButton.hideProgress && tg.MainButton.hideProgress(); } catch (_) {}
                 if (j && j.ok) {
+                  if (j.inviteLink && typeof j.inviteLink === 'string') LAST_INVITE_LINK = j.inviteLink;
                   const isDesktop = isDesktopPlatform();
                   if (!isDesktop && tg.showAlert) tg.showAlert('✅ Listo. Volviendo al chat…');
                   try { tg.MainButton.hide(); } catch (_) {}
                   try { tg.MainButton.setText('Listo'); } catch (_) {}
 
                   // Mostrar pantalla final y forzar intento de volver/cerrar.
-                  showDoneScreen();
+                  showDoneScreen(LAST_INVITE_LINK);
 
                   // Intento automático (si el cliente lo permite).
                   setTimeout(() => { try { goToBotChatAndClose(); } catch (_) {} }, 50);

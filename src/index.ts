@@ -145,6 +145,8 @@ function setupRoutes(): void {
       });
 
       // Entregar link personal (1 uso) al grupo privado (si el usuario ya inició el bot, esto llega)
+      let inviteLink: string | null = null;
+      let messageSent = false;
       if (typeof config.mainGroupChatId === 'number') {
         try {
           const invite = await createOneTimeInviteLink({
@@ -152,35 +154,45 @@ function setupRoutes(): void {
             chatId: config.mainGroupChatId,
             telegramUserId: userId,
           });
+          inviteLink = invite;
           const text =
             '✅ Listo.\n\n' +
             'Link personal (1 uso):\n' +
             `${invite}\n\n` +
             'Importante: no lo compartas. Si tienes varias cuentas en Telegram, ábrelo desde la **misma cuenta** con la que te registraste.\n' +
             'Si te aparece “caducado” o ya lo usaste, vuelve a abrir el bot y usa /registro para generar uno nuevo.';
-          bot.api
-            .sendMessage(userId, text, {
-              parse_mode: 'Markdown',
-              link_preview_options: { is_disabled: true },
-            })
-            .catch(() => undefined);
+          // Importante: esperamos a que Telegram acepte el envío antes de responder ok al WebApp.
+          await bot.api.sendMessage(userId, text, {
+            parse_mode: 'Markdown',
+            link_preview_options: { is_disabled: true },
+          });
+          messageSent = true;
         } catch (e) {
           console.error('Error creando invite link (submit):', e);
-          bot.api
-            .sendMessage(
+          try {
+            await bot.api.sendMessage(
               userId,
               '✅ Registro listo.\n\nNo pude generar tu link de acceso en este momento. ' +
                 'Por favor avisa a un administrador para revisar permisos del bot (crear links de invitación).'
-            )
-            .catch(() => undefined);
+            );
+            messageSent = true;
+          } catch {
+            messageSent = false;
+          }
         }
       } else {
-        bot.api
-          .sendMessage(userId, '✅ Registro listo. (Falta configurar MAIN_GROUP_CHAT_ID para generar el link de acceso).')
-          .catch(() => undefined);
+        try {
+          await bot.api.sendMessage(
+            userId,
+            '✅ Registro listo. (Falta configurar MAIN_GROUP_CHAT_ID para generar el link de acceso).'
+          );
+          messageSent = true;
+        } catch {
+          messageSent = false;
+        }
       }
 
-      res.json({ ok: true });
+      res.json({ ok: true, inviteLink, messageSent });
     } catch (e) {
       console.error('Error en /webapp/registro/submit:', e);
       res.status(500).json({ ok: false, error: 'server_error' });

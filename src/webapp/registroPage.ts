@@ -150,6 +150,50 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
           return String(s || '').trim().replace(/\\s+/g, ' ');
         }
 
+        function goToBotChatAndClose() {
+          if (!tg) return;
+          // Intento 1: deep link nativo (mejor para Desktop)
+          if (BOT_USERNAME && tg.openTelegramLink) {
+            try { tg.openTelegramLink('tg://resolve?domain=' + BOT_USERNAME); } catch (_) {}
+            try { tg.openTelegramLink('https://t.me/' + BOT_USERNAME); } catch (_) {}
+          }
+          try { tg.close(); } catch (_) {}
+          setTimeout(() => { try { tg.close(); } catch (_) {} }, 300);
+          setTimeout(() => { try { window.close(); } catch (_) {} }, 600);
+        }
+
+        function showDoneScreen() {
+          // Vista final (especialmente útil en Desktop cuando el auto-close no funciona)
+          const isDesktop = tg && String(tg.platform || '').toLowerCase() === 'tdesktop';
+          const btnText = isDesktop ? 'Volver al chat' : 'Cerrar';
+          // Importante: evitamos template strings anidadas que puedan romper el TS del servidor.
+          document.body.innerHTML =
+            '<div class="wrap">' +
+              '<div class="card">' +
+                '<div class="pill">✅ Listo</div>' +
+                '<h1>Registro completado</h1>' +
+                '<p>Volviendo al chat del bot para mostrar tu link de acceso…</p>' +
+                '<div style="margin-top:12px">' +
+                  '<button id="backBtn" style="' +
+                    'width:100%;' +
+                    'border-radius:12px;' +
+                    'border: 1px solid rgba(255,255,255,0.14);' +
+                    'background: rgba(255,255,255,0.10);' +
+                    'color: rgba(255,255,255,0.92);' +
+                    'padding: 12px 12px;' +
+                    'font-size: 15px;' +
+                    'cursor: pointer;' +
+                  '">' + String(btnText) + '</button>' +
+                '</div>' +
+                '<div class="footer" style="margin-top:12px">' +
+                  'Si no vuelve automáticamente, presiona el botón.' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          const backBtn = document.getElementById('backBtn');
+          if (backBtn) backBtn.addEventListener('click', goToBotChatAndClose);
+        }
+
         function buildPayload() {
           const firstName = String($('firstName').value || '').trim();
           const lastName = String($('lastName').value || '').trim();
@@ -203,23 +247,17 @@ export function getRegistroWebAppHtml(params: { botUsername?: string }): string 
               .then((j) => {
                 try { tg.MainButton.hideProgress && tg.MainButton.hideProgress(); } catch (_) {}
                 if (j && j.ok) {
-                  // Desktop: evitar popup "Cerrar" (showAlert) y volver al chat del bot.
-                  // En algunos clientes tg.close() puede ser sensible al timing.
                   const isDesktop = String(tg.platform || '').toLowerCase() === 'tdesktop';
                   if (!isDesktop && tg.showAlert) tg.showAlert('✅ Listo. Volviendo al chat…');
                   try { tg.MainButton.hide(); } catch (_) {}
                   try { tg.MainButton.setText('Listo'); } catch (_) {}
 
-                  // En desktop, forzamos navegación al chat del bot (si tenemos username).
-                  if (isDesktop && BOT_USERNAME && tg.openTelegramLink) {
-                    try { tg.openTelegramLink('https://t.me/' + BOT_USERNAME); } catch (_) {}
-                  }
+                  // Mostrar pantalla final y forzar intento de volver/cerrar.
+                  showDoneScreen();
 
-                  // Cierre robusto
-                  try { tg.close(); } catch (_) {}
-                  setTimeout(() => { try { tg.close(); } catch (_) {} }, 700);
-                  setTimeout(() => { try { tg.close(); } catch (_) {} }, 1400);
-                  setTimeout(() => { try { window.close(); } catch (_) {} }, 1700);
+                  // Intento automático (si el cliente lo permite).
+                  setTimeout(() => { try { goToBotChatAndClose(); } catch (_) {} }, 50);
+                  setTimeout(() => { try { goToBotChatAndClose(); } catch (_) {} }, 600);
                 } else {
                   showError('No se pudo guardar el registro. Intenta nuevamente.');
                 }

@@ -1,5 +1,5 @@
 import { Context, InlineKeyboard } from 'grammy';
-import { getMainGroup, getTopicBySlug, recordTopicInterest, updateUserProfile } from '../database/client';
+import { getTopicBySlug, recordTopicInterest, updateUserProfile } from '../database/client';
 import { handleOnboardingLawyerChoice, startOrContinueOnboarding } from './onboarding';
 
 /**
@@ -62,17 +62,11 @@ async function handleTopicClick(
       return;
     }
 
-    // Buscar el tema y el grupo principal
+    // Buscar el tema
     const topic = await getTopicBySlug(slug);
-    const mainGroup = await getMainGroup();
     
     if (!topic) {
       await ctx.answerCallbackQuery('❌ Tema no encontrado');
-      return;
-    }
-
-    if (!mainGroup) {
-      await ctx.answerCallbackQuery('❌ Grupo principal no configurado');
       return;
     }
 
@@ -84,35 +78,17 @@ async function handleTopicClick(
       console.error('Error registrando interés:', error);
     }
 
-    // Crear botón con el link del grupo principal
-    const keyboard = new InlineKeyboard()
-      .url('🚀 Unirme a Red Judicial', mainGroup.invite_link);
-
-    // Mensaje de respuesta
-    const message = `
-📚 **${topic.titulo}**
-
-${topic.descripcion}
-
-**¿Cómo acceder a este tema?**
-
-1️⃣ Haz clic en el botón de abajo para unirte al grupo principal
-2️⃣ Una vez dentro, busca el tema **"${topic.titulo}"** en la lista de temas del grupo
-3️⃣ Toca el tema para abrirlo y comenzar a participar
-
-💡 **Tip:** Los temas aparecen como subchats organizados dentro del grupo principal, manteniendo las conversaciones ordenadas por especialidad.
-
-👇 Únete al grupo principal ahora:
-`;
+    const message =
+      `📚 **${topic.titulo}**\n\n` +
+      `${topic.descripcion}\n\n` +
+      `**Cómo se usa**\n` +
+      `- Dentro del grupo, busca el tema **"${topic.titulo}"** y entra a conversar.\n\n` +
+      `🔐 Si aún no estás dentro del grupo privado, usa /start (te genero un link personal de 1 uso).`;
 
     // Responder al callback query (feedback inmediato)
     await ctx.answerCallbackQuery(`✅ Tema: ${topic.titulo}`);
 
-    // Enviar mensaje con el botón
-    await ctx.reply(message, {
-      reply_markup: keyboard,
-      parse_mode: 'Markdown',
-    });
+    await ctx.reply(message, { parse_mode: 'Markdown' });
 
   } catch (error) {
     console.error('Error en handleTopicClick:', error);

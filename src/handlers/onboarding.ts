@@ -253,12 +253,7 @@ export async function handleOnboardingLawyerChoice(ctx: Context, isLawyer: boole
 }
 
 export async function sendMenu(ctx: Context): Promise<void> {
-  const mainGroup = await getMainGroup();
   const topics = await getActiveTopics();
-  if (!mainGroup) {
-    await ctx.reply('❌ El grupo principal no está configurado.');
-    return;
-  }
 
   const keyboard = new InlineKeyboard();
   for (let i = 0; i < topics.length; i += 2) {
@@ -270,12 +265,16 @@ export async function sendMenu(ctx: Context): Promise<void> {
       keyboard.row();
     }
   }
-  keyboard.url('🚀 Unirme a Red Judicial', mainGroup.invite_link);
 
-  await ctx.reply('📋 **Temas disponibles**\n\nSelecciona un tema para ver detalles o únete al grupo principal:', {
+  await ctx.reply(
+    '📋 **Temas disponibles**\n\n' +
+      'Selecciona un tema para ver detalles.\n\n' +
+      '🔐 Para entrar al grupo privado, usa /start (te genero un link personal de 1 uso).',
+    {
     reply_markup: keyboard,
     parse_mode: 'Markdown',
-  });
+    }
+  );
 }
 
 

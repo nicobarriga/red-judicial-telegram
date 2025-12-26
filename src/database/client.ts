@@ -313,3 +313,20 @@ export async function keepSupabaseAwake(): Promise<{ ok: boolean; error?: string
   }
 }
 
+/**
+ * Marca un invite link como usado (cuando Telegram notifica un join).
+ */
+export async function markInviteUsed(params: { inviteLink: string; usedAt?: string }): Promise<void> {
+  const client = initSupabase();
+  const usedAt = params.usedAt || new Date().toISOString();
+  const { error } = await client
+    .from('telegram_user_invites')
+    .update({ used_at: usedAt })
+    .eq('invite_link', params.inviteLink)
+    .is('used_at', null);
+
+  if (error) {
+    console.error('Error marcando invite como usado:', error);
+  }
+}
+

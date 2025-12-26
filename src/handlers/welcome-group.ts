@@ -1,6 +1,6 @@
 import { Context, InlineKeyboard } from 'grammy';
 import { config } from '../config';
-import { getActiveTopics } from '../database/client';
+import { getActiveTopics, markInviteUsed } from '../database/client';
 
 function getDeepLinkStart(): string | null {
   if (!config.botUsername) return null;
@@ -34,6 +34,16 @@ export async function handleGroupWelcome(ctx: Context): Promise<void> {
     (newStatus === 'member' || newStatus === 'restricted');
 
   if (!isJoin || !user) return;
+
+  // Registrar en Supabase el invite link usado (si Telegram lo entrega en el update)
+  try {
+    const usedInvite = chatMember?.invite_link?.invite_link || chatMember?.invite_link?.invite_link?.invite_link;
+    if (typeof usedInvite === 'string' && usedInvite.startsWith('http')) {
+      await markInviteUsed({ inviteLink: usedInvite });
+    }
+  } catch (e) {
+    console.error('No se pudo marcar invite usado:', e);
+  }
 
   const mention = user.username ? `@${user.username}` : (user.first_name || 'Hola');
   const deepLink = getDeepLinkStart();

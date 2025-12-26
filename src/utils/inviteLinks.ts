@@ -14,9 +14,15 @@ export async function createOneTimeInviteLink(params: {
   // Asegurar Supabase inicializado (por si se llama desde rutas HTTP)
   initSupabase();
 
+  // Nombre corto y único (Telegram limita el name a 32 chars)
+  const yymmdd = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+  const rand = Math.random().toString(36).slice(2, 6);
+  const name = `RJ${telegramUserId}-${yymmdd}-${rand}`.slice(0, 32);
+
   const link = await api.createChatInviteLink(chatId, {
     member_limit: 1,
-    name: `RJ ${telegramUserId} ${new Date().toISOString().slice(0, 10)}`,
+    creates_join_request: false,
+    name,
   });
 
   const inviteUrl = link.invite_link;

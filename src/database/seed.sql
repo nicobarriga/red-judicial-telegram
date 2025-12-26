@@ -20,11 +20,12 @@ INSERT INTO telegram_topics (slug, titulo, descripcion, orden, activo) VALUES
 ('jpl', 'JPL', 'Juzgados de Policía Local: infracciones de tránsito, contravenciones y procedimientos', 9, true),
 ('propiedad_intelectual', 'Propiedad Intelectual', 'Patentes, marcas, derechos de autor, propiedad industrial y competencia desleal', 10, true),
 ('comercial', 'Derecho Comercial', 'Derecho comercial, sociedades, mercado de valores y operaciones mercantiles', 11, true),
-('insolvencia', 'Insolvencia y Reemprendimiento', 'Quiebras, reorganización empresarial, ley de insolvencia y reemprendimiento', 12, true),
-('ambiental', 'Derecho Ambiental y Minero', 'Derecho ambiental, evaluación de impacto, recursos naturales, minería y sanciones ambientales', 13, true),
-('legal_tech', 'Legal Tech', 'Tecnología aplicada al derecho, automatización, IA legal, herramientas y transformación digital', 14, true),
-('oportunidades', 'Oportunidades Laborales', 'Ofertas de trabajo, pasantías, colaboraciones profesionales y networking laboral', 15, true),
-('jurisprudencia', 'Jurisprudencia', 'Jurisprudencia útil resumida, fallos relevantes y criterios aplicables a la práctica', 16, true),
-('estudiantes', 'Estudiantes', 'Espacio para estudiantes y carreras afines: dudas, orientación, materiales y apoyo', 17, true)
+('migratorio', 'Derecho Migratorio', 'Residencia, visas, nacionalidad, expulsiones y procedimientos migratorios', 12, true),
+('insolvencia', 'Insolvencia y Reemprendimiento', 'Quiebras, reorganización empresarial, ley de insolvencia y reemprendimiento', 13, true),
+('ambiental', 'Derecho Ambiental y Minero', 'Derecho ambiental, evaluación de impacto, recursos naturales, minería y sanciones ambientales', 14, true),
+('legal_tech', 'Legal Tech', 'Tecnología aplicada al derecho, automatización, IA legal, herramientas y transformación digital', 15, true),
+('oportunidades', 'Oportunidades Laborales', 'Ofertas de trabajo, pasantías, colaboraciones profesionales y networking laboral', 16, true),
+('jurisprudencia', 'Jurisprudencia', 'Jurisprudencia útil resumida, fallos relevantes y criterios aplicables a la práctica', 17, true),
+('estudiantes', 'Estudiantes', 'Espacio para estudiantes y carreras afines: dudas, orientación, materiales y apoyo', 18, true)
 ON CONFLICT (slug) DO NOTHING;
 

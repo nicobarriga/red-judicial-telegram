@@ -7,6 +7,15 @@ function getDeepLinkStart(): string | null {
   return `https://t.me/${config.botUsername}?start=registro`;
 }
 
+function mentionMarkdown(user: any): string {
+  // Preferir @username si existe; si no, mención por link a user id (funciona en grupos/supergrupos).
+  if (user?.username) return `@${user.username}`;
+  const name = String(user?.first_name || 'Hola').replace(/\[/g, '(').replace(/\]/g, ')');
+  const id = user?.id;
+  if (typeof id === 'number') return `[${name}](tg://user?id=${id})`;
+  return name;
+}
+
 /**
  * Saluda a nuevos miembros cuando entran al grupo principal.
  * - Si WELCOME_TOPIC_ID está configurado, publica dentro del tema "Bienvenida".
@@ -45,7 +54,7 @@ export async function handleGroupWelcome(ctx: Context): Promise<void> {
     console.error('No se pudo marcar invite usado:', e);
   }
 
-  const mention = user.username ? `@${user.username}` : (user.first_name || 'Hola');
+  const mention = mentionMarkdown(user);
   const deepLink = getDeepLinkStart();
 
   let topicsText = '';
@@ -61,18 +70,22 @@ export async function handleGroupWelcome(ctx: Context): Promise<void> {
     console.error('Error obteniendo temas para bienvenida:', e);
   }
 
+  const botLink = config.botUsername ? `https://t.me/${config.botUsername}` : null;
+
   const text =
-    `${mention} — **Guía rápida de uso**\n\n` +
+    `Hola ${mention}, bienvenid@ al Grupo Privado de **Red Judicial**.\n\n` +
+    `Te dejamos una guía rápida de uso\n\n` +
     `**Uso recomendado**\n` +
     `- Utiliza el tema correspondiente a tu materia\n` +
     `- Preguntas claras, con contexto mínimo (hechos + etapa + qué necesitas)\n` +
     `- Publicidad/servicios solo en el tema **“Oportunidades Laborales”**\n` +
     `- Mantengamos orden, utilidad y respeto profesional` +
-    topicsText;
+    topicsText +
+    (botLink ? `\n\nPor último, si quieres invitar a alguien puedes compartir el siguiente link: ${botLink}` : '');
 
   try {
-    // En modo privado, el usuario ya viene registrado; dejamos botón opcional para actualizar datos.
-    const keyboard = deepLink ? new InlineKeyboard().url('✍️ Actualizar registro', deepLink) : undefined;
+    // Botón opcional: abrir el bot (útil para invitar o soporte). No empuja registro en el grupo.
+    const keyboard = botLink ? new InlineKeyboard().url('🤖 Abrir bot', botLink) : (deepLink ? new InlineKeyboard().url('🤖 Abrir bot', deepLink) : undefined);
 
     const sent = await ctx.api.sendMessage(chatId, text, {
       parse_mode: 'Markdown',

@@ -57,7 +57,8 @@ export async function handleStart(ctx: CommandContext<Context>): Promise<void> {
             await ctx.reply(
               '🔐 Tu link personal (1 uso):\n' +
                 `${invite}\n\n` +
-                'Si te da error o ya lo usaste, usa /registro para generar otro.',
+                'Importante: no lo compartas. Si tienes varias cuentas en Telegram, ábrelo desde la **misma cuenta** con la que te registraste.\n' +
+                'Si te aparece “caducado” o ya lo usaste, usa /registro para generar otro.',
               { parse_mode: 'Markdown', link_preview_options: { is_disabled: true } }
             );
           } catch (e) {

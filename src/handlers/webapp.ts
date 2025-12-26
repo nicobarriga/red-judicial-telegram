@@ -128,7 +128,8 @@ export async function handleWebAppData(ctx: Context): Promise<void> {
           '✅ Listo.\n\n' +
             'Link personal (1 uso):\n' +
             `${invite}\n\n` +
-            'Si te da error o ya lo usaste, vuelve a abrir el bot y usa /registro para generar uno nuevo.',
+            'Importante: no lo compartas. Si tienes varias cuentas en Telegram, ábrelo desde la **misma cuenta** con la que te registraste.\n' +
+            'Si te aparece “caducado” o ya lo usaste, vuelve a abrir el bot y usa /registro para generar uno nuevo.',
           { link_preview_options: { is_disabled: true }, parse_mode: 'Markdown' }
         );
       } catch (e) {

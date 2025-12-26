@@ -52,6 +52,8 @@ export interface Config {
   welcomeAutoDeleteSeconds?: number; // Borra el mensaje de bienvenida tras N segundos (opcional)
   welcomeTopicId?: number; // message_thread_id del tema "Bienvenida" (opcional)
   deleteServiceMessages?: boolean; // Borra mensajes de servicio (unió/salió) en el grupo
+  supabaseKeepAliveEnabled?: boolean; // Mantener Supabase "despierto" (plan free) con una consulta periódica
+  supabaseKeepAliveIntervalHours?: number; // Intervalo del keep-alive en horas (default: 24)
   port: number;
 }
 

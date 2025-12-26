@@ -16,6 +16,13 @@ export const config: Config = {
     : undefined,
   welcomeTopicId: process.env.WELCOME_TOPIC_ID ? parseInt(process.env.WELCOME_TOPIC_ID, 10) : undefined,
   deleteServiceMessages: ['1', 'true', 'yes', 'on'].includes((process.env.DELETE_SERVICE_MESSAGES || '').toLowerCase()),
+  // Keep-alive de Supabase (plan free). Por defecto habilitado cada 24h.
+  supabaseKeepAliveEnabled: !['0', 'false', 'no', 'off'].includes(
+    String(process.env.SUPABASE_KEEPALIVE_ENABLED || 'true').toLowerCase()
+  ),
+  supabaseKeepAliveIntervalHours: process.env.SUPABASE_KEEPALIVE_INTERVAL_HOURS
+    ? parseInt(process.env.SUPABASE_KEEPALIVE_INTERVAL_HOURS, 10)
+    : 24,
   port: parseInt(process.env.PORT || '3000', 10),
 };
 

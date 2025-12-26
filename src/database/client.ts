@@ -292,3 +292,24 @@ export async function recordUserInvite(params: {
   }
 }
 
+/**
+ * Keep-alive para evitar que Supabase (plan free) entre en pausa.
+ * Ejecuta una consulta liviana.
+ */
+export async function keepSupabaseAwake(): Promise<{ ok: boolean; error?: string }> {
+  const client = initSupabase();
+  const started = Date.now();
+  try {
+    const { error } = await client.from('telegram_group').select('id').limit(1);
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+    const ms = Date.now() - started;
+    console.log(`🫀 Supabase keep-alive OK (${ms}ms)`);
+    return { ok: true };
+  } catch (e: any) {
+    const msg = typeof e?.message === 'string' ? e.message : String(e);
+    return { ok: false, error: msg };
+  }
+}
+

@@ -2,7 +2,7 @@ import express from 'express';
 import { webhookCallback } from 'grammy';
 import { config, validateConfig } from './config';
 import { bot, initBot } from './bot/bot';
-import { initSupabase } from './database/client';
+import { initSupabase, keepSupabaseAwake } from './database/client';
 import { getRegistroWebAppHtml } from './webapp/registroPage';
 import { verifyTelegramWebAppInitData } from './utils/telegramWebApp';
 import { updateUserProfile } from './database/client';
@@ -32,6 +32,39 @@ async function init(): Promise<void> {
     console.error('❌ Error en inicialización:', error);
     process.exit(1);
   }
+}
+
+function scheduleSupabaseKeepAlive(): void {
+  const enabled = config.supabaseKeepAliveEnabled !== false;
+  if (!enabled) {
+    console.log('🫀 Supabase keep-alive deshabilitado (SUPABASE_KEEPALIVE_ENABLED=false)');
+    return;
+  }
+
+  const hoursRaw = config.supabaseKeepAliveIntervalHours ?? 24;
+  const hours = Number.isFinite(hoursRaw) ? Math.max(1, hoursRaw) : 24;
+  const intervalMs = hours * 60 * 60 * 1000;
+
+  const run = async () => {
+    const res = await keepSupabaseAwake();
+    if (!res.ok) {
+      console.warn(`🫀 Supabase keep-alive falló: ${res.error || 'unknown_error'}`);
+    }
+  };
+
+  // Primer ping con un pequeño delay para no competir con el arranque.
+  setTimeout(() => {
+    run().catch((e) => console.warn('🫀 Supabase keep-alive error:', e));
+  }, 15_000);
+
+  const t = setInterval(() => {
+    run().catch((e) => console.warn('🫀 Supabase keep-alive error:', e));
+  }, intervalMs);
+
+  // No bloquear shutdown.
+  (t as any).unref?.();
+
+  console.log(`🫀 Supabase keep-alive habilitado: cada ${hours}h`);
 }
 
 /**
@@ -166,6 +199,7 @@ function setupRoutes(): void {
 async function start(): Promise<void> {
   await init();
   setupRoutes();
+  scheduleSupabaseKeepAlive();
 
   app.listen(config.port, () => {
     console.log(`🚀 Servidor escuchando en puerto ${config.port}`);
